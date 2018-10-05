@@ -1,0 +1,24 @@
+Package: sigHicInteractions
+Title: Significant HiC Interactions
+Version: 0.1
+Authors@R: person("Will", "Liao", email = "wliao@nygenome.org", role = c("aut", "cre"))
+Description: Processes HiC-Pro tri-matrix and abs files to call significant interactions
+    between target bins and anchor bins falling within some specificed regions.
+Depends: R (>= 3.3.1)
+License: NULL
+Encoding: UTF-8
+LazyData: true
+Imports:
+    GenomicRanges,
+    HiTC,
+    ggplot2,
+    MASS,
+    gridExtra,
+    RColorBrewer,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    org.Hs.eg.db,
+    data.table,
+    plyr,
+    reshape2,
+    csaw
+RoxygenNote: 6.0.1
