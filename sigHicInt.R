@@ -35,7 +35,7 @@ parser$add_argument("-e", "--anno", dest = "anno",
 parser$add_argument("-i", "--anno_label", dest = "anno_label",
                     type = "character", required = FALSE, nargs = "+",
                     help = "Labels for annotation tracks")
-parser$add_argument("-q", "--anno_color", dest = "anno_color",
+parser$add_argument("-q", "--anno_colors", dest = "anno_colors",
                     type = "character", required = FALSE, default = NULL, nargs = "+",
                     help = "Default annotation color [Default: brewer.pal(n, \"Dark2\")")
 parser$add_argument("-f", "--flank", dest = "flank",
@@ -63,6 +63,7 @@ parser$add_argument("-t", "--top", dest = "top",
                     help = "Only process <top> BED Regions of Interest file")
 
 args <- parser$parse_args()
+saveRDS(args, paste0(args$output_prefix, ".args.RDS"))
 
 # Set-up
 library(sigHicInteractions)
@@ -70,6 +71,7 @@ library(rtracklayer)
 library(GenomicRanges)
 library(HiTC)
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 library(org.Hs.eg.db)
 library(org.Mm.eg.db)
@@ -142,6 +144,12 @@ if (is.null(args$genes)) {
 } else if (!is.null(args$genes) & grepl("mm10", args$genes)) {
     db <- org.Mm.eg.db
     txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+} else if (!is.null(args$genes) & grepl("hg38", args$genes)) {
+    db <- org.Hs.eg.db
+    txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+} else {
+    db <- org.Hs.eg.db
+    txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 }
 genes <- import.gff2(con=args$genes,format='gff2')
 
@@ -312,7 +320,7 @@ for (chrom in chroms) {
             if (length(sub) > 0) {
                 key <- ifelse('gene_id' %in% colnames(mcols(sub)), 'gene_id', 'id')
                 cr <- data.frame(collapseRanges(sub, key = key,
-                                 flank = (width(region)/20)))
+                                 flank = width(region)/20))
                 genes.df <- cr[c(1:3,7,10:ncol(cr))]   
 #                genes.df$height <- as.numeric(as.factor(genes.df[[key]]))     
             } else {
@@ -331,8 +339,8 @@ for (chrom in chroms) {
             # Get Domains in region and convert into data.frame
             domains.df <- data.frame(subsetByOverlaps(domains.gr,region))
             # For RajarajanP, ordered labels
-            domains.df$sample <- factor(domains.df$sample,levels=unique(domains.gr$sample))
-            domains.df$height <- as.numeric(factor(domains.df$sample))
+            domains.df$sample <- factor(domains.df$sample,levels=names)
+            domains.df$height <- sapply(domains.df$sample, function(x) which(names == x))
             domains.df <- ddply(domains.df, .(sample), function(x) cbind(x,rep(c(0,1), length.out=nrow(x))))
             colnames(domains.df)[ncol(domains.df)] <- 'alpha'
             
@@ -361,22 +369,8 @@ for (chrom in chroms) {
             # Get anchor BED ranges2, e.g. PGC haplotype and convert into data.frame
             # Widen really narrow ROI's using min.width
             loci.gr <- subsetByOverlaps(ranges2,region)
-            start <- sapply(loci.gr,function (x) {
-                if (end(x) - start(x) < min.width) {
-                    return(round((start(x)+end(x))/2) - min.width )
-                } else {
-                    return(start(x))
-                }
-            })                 
-            end <- sapply(loci.gr,function (x) {
-                if (end(x) - start(x) < min.width) {
-                    return(round((start(x)+end(x))/2) + min.width )
-                } else {
-                    return(end(x))
-                }
-            })        
-            start(loci.gr) <- start
-            end(loci.gr) <- end
+            short.idx <- which(width(loci.gr) < min.width)
+            loci.gr[short.idx] <- resize(loci.gr[short.idx], width = min.width)
             
             range.gr <- loci.gr[loci.gr$id==range$id]
             loci.gr <- loci.gr[loci.gr$id!=range$id]

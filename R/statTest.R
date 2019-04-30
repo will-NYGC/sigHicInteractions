@@ -51,26 +51,24 @@ poisP <- function(chr,bin1,bins2,obs,exp,sample) {
     return(q.values)
 }
 
-
-#' @import MASS
+#' @import fitdistrplus
 #' @export
-# Weibull p-value off Z-score
-# 1.  Use 'loess' estimated expected interaction counts and stdev
-# 2.  Calculate Z-score based of observed off of expected (mean) and stdev
-# 3.  Z-score follows Weibull distribution
-# 4.  dbinom(x,n,p) == p.value
-# 5.  convert -log10 p
+# Weibull p-value
 weibullP <- function(chr,bin1,bins2,obs,exp,sample) {  # bin1: bed/vcf focal point; bin2: other interacting bin to evaluate
     
     stopifnot(class(obs)=="HTCexp")
     stopifnot(class(exp)=="list")
 
     o <- intdata(obs)[bin1,]
+
+    quant95 <- quantile(as.vector(exp$exp.interaction), probs = .95, na.rm = TRUE)
+    exp$exp.interaction[exp$exp.interaction > quant95] <- NA
+    exp$exp.interaction[exp$exp.interaction == 0] <- NA
     
     e.mu <- exp$exp.interaction[bin1,]
     e.sd <- exp$stdev.estimate[bin1,]
     z <- (o-e.mu)/e.sd
-    fit <- fitdistr(e.mu[!is.na(e.mu)],densfun='weibull',lower=c(0,0))
+    fit <- fitdistrplus::fitdist(e.mu[!is.na(e.mu)], 'weibull')
 
     # if (runif(1) > .95) {  # Plot 5% of the Weibull fits for interactions randomly selected
 
@@ -88,7 +86,7 @@ weibullP <- function(chr,bin1,bins2,obs,exp,sample) {  # bin1: bed/vcf focal poi
     # }
         
     p.values <- pweibull(o,shape=fit$estimate[1],scale=fit$estimate[2],lower.tail=FALSE)
-    names(p.values) <- names(e)
+    names(p.values) <- names(e.mu)
 
     q.values <- p.adjust(p.values,method='BH')
     q.values[bin1] <- NA

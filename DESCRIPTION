@@ -8,17 +8,5 @@ Depends: R (>= 3.3.1)
 License: NULL
 Encoding: UTF-8
 LazyData: true
-Imports:
-    GenomicRanges,
-    HiTC,
-    ggplot2,
-    MASS,
-    gridExtra,
-    RColorBrewer,
-    TxDb.Hsapiens.UCSC.hg19.knownGene,
-    org.Hs.eg.db,
-    data.table,
-    plyr,
-    reshape2,
-    csaw
-RoxygenNote: 6.0.1
+Imports: GenomicRanges, HiTC, RColorBrewer, data.table, fitdistrplus, ggplot2, gridExtra
+RoxygenNote: 6.1.1

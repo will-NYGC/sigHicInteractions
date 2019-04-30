@@ -15,7 +15,6 @@ getBins <- function(query ,  abs ,  midpoint = FALSE) {
 
 #' @import GenomicRanges data.table
 #' @export
-# Assumes a GTF-like object, uses gr$source to reduce, otherwise must specify
 collapseRanges <- function(gr,key='ucsc_id', flank = NULL) {  
     
     stopifnot(inherits(gr,"GRanges"))

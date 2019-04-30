@@ -1,4 +1,4 @@
-#' @import ggplot2 gridExtra RColorBrewer TxDb.Hsapiens.UCSC.hg19.knownGene org.Hs.eg.db TxDb.Mmusculus.UCSC.mm10.knownGene org.Mm.eg.db plyr data.table reshape2 csaw
+#' @import ggplot2 gridExtra RColorBrewer
 #' @export
 makePlot <- function(range,region,p,transcript,exon,domains,anno,loci,abs,output,cols = NULL, cols2 = NULL) {
 
@@ -30,7 +30,7 @@ makePlot <- function(range,region,p,transcript,exon,domains,anno,loci,abs,output
         scale_alpha(range=c(.75,1)) +
         scale_x_continuous(expand=c(0,0)) +
         ylab("Domains") +
-        coord_cartesian(xlim=c(min,max)) +
+        coord_cartesian(xlim=c(min,max),ylim=c(0,length(levels(domains$sample))+1)) +
         guides(alpha=FALSE) +
         theme(legend.position='top',
               legend.title=element_blank(),
