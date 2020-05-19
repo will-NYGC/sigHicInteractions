@@ -23,6 +23,9 @@ parser$add_argument("-r", "--roi", dest = "roi",
 parser$add_argument("-l", "--roi_label", dest = "roi_label",
                     type = "character", required = FALSE, default = "ROI",
                     help = "Label for ROI's in plot [Default: \"ROI\"]")
+parser$add_argument("-u", "--roi_column", dest = "roi_column",
+                    type = "character", required = FALSE, default = NULL,
+                    help = "GRanges mcols column to use as ID")
 parser$add_argument("-o", "--output_prefix", dest = "output_prefix",
                     type = "character", required = FALSE, default = 'sigInt',
                     help = "Output prefix [Default: \'sigInt\']")
@@ -118,7 +121,11 @@ if (file.exists(paste0(args$output_prefix,'.scores.txt')) &
 
 # Load ROI from BED file
 ranges <- import.bed(args$roi)
-mcols(ranges)$id <- names(ranges) <- sprintf("%s:%d-%d",seqnames(ranges),start(ranges),end(ranges))
+if (!is.null(args$roi_column)) {
+    mcols(ranges)$id <- names(ranges) <- mcols(ranges)[[args$roi_column]]
+} else {
+    mcols(ranges)$id <- names(ranges) <- sprintf("%s:%d-%d",seqnames(ranges),start(ranges),end(ranges))
+}
 
 # args$top or args$chroms, then subselect ranges
 if (!is.null(args$top)) { ranges <- ranges[seq(args$top)] }
@@ -232,7 +239,7 @@ for (chrom in chroms) {
     if (args$distBg=='meanSd') {
         # Custom version of HiTC:::getExpectedCountsMean that also returns stdev
         exp <- lapply(obs,function (x) lapply(x,getExpectedCountsMeanSd)) 
-    } else if ( args $distBg=='loess') {
+    } else if ( args$distBg=='loess') {
         exp <- lapply(obs,function (x) lapply(x,getExpectedCounts,method='loess',
                                               stdev=TRUE,asList=TRUE,plot=FALSE))
     }
